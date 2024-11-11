@@ -1,0 +1,13 @@
+:root {
+  --main-bg: linear-gradient(#52ba5d, #fff);
+  --footer: linear-gradient(#fff, #52ba5d);
+  --content: #fff;
+  --complement: #52ba5d;
+  --highlight: #fff200;
+  --standard: #000;
+
+  --arrow-size: 5px;
+}
+h1{
+  color: var(--complement);
+}
