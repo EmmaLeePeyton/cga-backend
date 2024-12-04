@@ -67,6 +67,23 @@ app.post("/api/events",upload.single("img"), (req, res) => {
   res.status(200).send(event);
 });
 
+app.put("/api/events/:id", upload.single('img'), (req, res) => {
+  let event = events.find(ev => ev.id === parseInt(req.params.id));
+  
+  if (!event) res.status(400).send("Event with given id was not found");
+  
+  const result = validateEvent(req.body);
+  
+  if (result.error) {
+      res.status(400).send(result.error.details[0].message);
+      return;
+  }
+  
+  event.name = req.body.name;
+  event.description = req.body.description;
+  
+  res.send(event);
+});
 
 const validateEvent = (event) => {
 
