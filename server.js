@@ -85,6 +85,19 @@ app.put("/api/events/:id", upload.single('img'), (req, res) => {
   res.send(event);
 });
 
+app.delete('/api/events/:id', (req, res) => {
+  const event = events.find(h => h.id === parseInt(req.params.id));
+
+  if (!event) {
+      res.status(404).send('The event with the given id was not found');
+  }
+
+  const index = events.indexOf(event);
+  events.splice(index, 1);
+
+  res.send(event);
+});
+
 const validateEvent = (event) => {
 
   const schema = Joi.object({
