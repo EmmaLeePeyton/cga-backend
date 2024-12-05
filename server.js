@@ -15,13 +15,12 @@ mongoose.connect(
 .then(() => console.log('Connected to mongodb'))
 .catch(error => console.log('Couldn\'t connect to mongodb', error));
 
-const recipeSchema = new mongoose.Schema({
+const eventSchema = new mongoose.Schema({
   name: String,
-  description: String,
-  ingredients: [String]
+  description: String
 });
 
-const Recipe = mongoose.model('Recipe', recipeSchema);
+const TheEvent = mongoose.model('EventsDB', eventSchema);
 
 
 const storage = multer.diskStorage({
@@ -35,35 +34,17 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-
-const events = [
-  {
-    "_id": 0,
-    "name": "default",
-    "description": "No events at this time"
-  },
-  {
-    "_id": 1,
-    "name": "spring",
-    "description": "some events entered"
-  },
-  {
-    "_id": 3,
-    "name": "fall",
-    "description": "other events entered"
-  }
-];
 app.get("/",(req,res)=>{
   console.log("getting me");
   res.sendFile(_dirname + "/index.html");
 });
 
-app.get("/api/events", (req, res) => {
-  res.json(events);
+app.get("/api/events", async(req, res) => {
+  const manyEvents = await TheEvent.find();
+  res.json(manyEvents);
 });
 
-app.post("/api/events",upload.single("img"), (req, res) => {
-  console.log("i am post");
+app.post("/api/events",upload.single("img"), async(req, res) => {
   const result = validateEvent(req.body);
 
   if (result.error) {
@@ -72,48 +53,44 @@ app.post("/api/events",upload.single("img"), (req, res) => {
     return;
   }
 
-  console.log("Data is valid");
-  const event = {
-    _id: events.length + 1,
-    name: req.body.name,
-    description: req.body.description,
-  };
+  const newEvent = new TheEvent({
+    name:req.body.name,
+    description:req.body.description
+  });
 
-  events.push(event);
-  res.status(200).send(event);
+  const newTheEvent = await newEvent.save();
+  res.status(200).send(newTheEvent);
 });
 
-app.put("/api/events/:id", upload.single('img'), (req, res) => {
-
-  let event = events.find(ev => ev._id === parseInt(req.params.id));
-  console.log(event);
-  if (!event) res.status(400).send("Event with given id was not found");
-  
+app.put("/api/events/:id", upload.single('img'), async(req, res) => {
   const result = validateEvent(req.body);
-  
+
   if (result.error) {
     res.status(400).send(result.error.details[0].message);
     return;
   }
   
-  event.name = req.body.name;
-  event.description = req.body.description;
-  
-  res.send(event);
-});
+  const updateThese = {
+    name:req.body.name,
+    description:req.body.description
+  };
 
-app.delete('/api/events/:id', (req, res) => {
-  console.log("I am in delete");
-  const event = events.find(h => h._id === parseInt(req.params.id));
-
-  if (!event) {
-    res.status(404).send('The event with the given id was not found');
+  if (req.file) {
+    updateThese.main_image = req.file.filename;
   }
 
-  const index = events.indexOf(event);
-  events.splice(index, 1);
+  const wentThrough = await TheEvent.updateOne({_id:req.params.id}, updateThese);
 
-  res.send(event);
+
+  const evnet = await TheEvent.findOne({_id:req.params.id});
+
+  res.send(evnet);
+});
+
+app.delete('/api/events/:id', async(req, res) => {
+  const leave = await TheEvent.findByIdAndDelete(req.params.id);
+
+  res.send(leave);
 });
 
 const validateEvent = (event) => {
@@ -123,7 +100,6 @@ const validateEvent = (event) => {
     name: Joi.string().min(3).required(),
     description: Joi.string().min(8).required(),
   });
-  console.log(schema.validate(event))
   return schema.validate(event);
 };
 
