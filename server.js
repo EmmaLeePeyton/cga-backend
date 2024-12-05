@@ -3,10 +3,26 @@ const cors = require("cors");
 const app = express();
 const Joi = require("joi");
 const multer = require("multer");
+const mongoose = require('mongoose');
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 app.use(express.json());
 app.use(cors());
+
+mongoose.connect(
+  'mongodb+srv://Generic:JU0e5NjVLY7RA9c8@clusterofcluster.hdbc3.mongodb.net/?'
+)
+.then(() => console.log('Connected to mongodb'))
+.catch(error => console.log('Couldn\'t connect to mongodb', error));
+
+const recipeSchema = new mongoose.Schema({
+  name: String,
+  description: String,
+  ingredients: [String]
+});
+
+const Recipe = mongoose.model('Recipe', recipeSchema);
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
